@@ -600,31 +600,43 @@
             saveToLocalStorage(event.target.id, event.target.value);
         }
 
+        /**
+         * Clears all editable fields, including meter readings, payment methods,
+         * and user details.
+         */
         function clearEditableFields() {
+            // Clear meter readings
             document.getElementById('metro1Number').value = ''; 
             document.getElementById('metro1P').value = '0';
             document.getElementById('metro1F').value = '0';
             document.getElementById('metro2Number').value = ''; 
             document.getElementById('metro2P').value = '0';
             document.getElementById('metro2F').value = '0';
-
+            
+            // Set default values for other fields
             const defaultPrecio = 137.20;
             document.getElementById('precio').value = formatNumberUS(defaultPrecio, true);
             document.getElementById('nombreLlenador').value = '';
-
-            // Limpiar los nuevos campos de pago
-            saveToLocalStorage('tarjetaCredito', []);
-            saveToLocalStorage('bonoGas', []);
-            saveToLocalStorage('credito', []);
-            renderPaymentMethodList('tarjetaCredito');
-            renderPaymentMethodList('bonoGas');
-            renderPaymentMethodList('credito');
 
             // Deseleccionar todos los radio buttons de turno
             document.querySelectorAll('input[name="turno"]').forEach(radio => {
                 radio.checked = false;
             });
 
+            // Clear payment methods arrays and update localStorage
+            paymentMethods.tarjetaCredito = [];
+            paymentMethods.bonoGas = [];
+            paymentMethods.credito = [];
+            saveToLocalStorage('tarjetaCredito', []);
+            saveToLocalStorage('bonoGas', []);
+            saveToLocalStorage('credito', []);
+
+            // Re-render payment method lists to reflect changes
+            renderPaymentMethodList('tarjetaCredito');
+            renderPaymentMethodList('bonoGas');
+            renderPaymentMethodList('credito');
+
+            // Also clear localStorage for other fields
             saveToLocalStorage('metro1Number', ''); 
             saveToLocalStorage('metro1P', '0');
             saveToLocalStorage('metro1F', '0');
@@ -635,6 +647,7 @@
             saveToLocalStorage('nombreLlenador', '');
             saveToLocalStorage('selectedTurno', ''); 
 
+            // Recalculate totals to show "0"
             updateMeterGlsAndTotalGls();
         }
 
