@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuadre de Turno</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Link al manifest.json para PWA -->
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+        h1 {
+            color: #1a202c;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.25rem; /* text-4xl */
+            font-weight: 700; /* font-bold */
+        }
+        .section-title {
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 600; /* font-semibold */
+            color: #2d3748;
+            margin-top: 20px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #edf2f7;
+            padding-bottom: 5px;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            width: 120px;
+            font-weight: 500;
+            color: #4a5568;
+        }
+        .input-group input[type="number"],
+        .input-group input[type="text"] {
+            flex-grow: 1;
+            padding: 10px 15px;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            color: #2d3748;
+            background-color: #f7fafc;
+            transition: all 0.2s ease-in-out;
+        }
+        .input-group input[type="number"]:focus,
+        .input-group input[type="text"]:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+            background-color: #ffffff;
+        }
+        .total-display {
+            background-color: #e2e8f0;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 700; /* font-bold */
+            color: #2d3748;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .total-display span:last-child {
+            color: #38a169; /* Green for totals */
+        }
+        .note {
+            margin-top: 20px;
+            font-size: 0.875rem; /* text-sm */
+            color: #718096;
+            text-align: center;
+        }
+        .meter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        .action-button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .clear-button {
+            background-color: #ef4444; /* red-500 */
+            color: white;
+        }
+        .clear-button:hover {
+            background-color: #dc2626; /* red-600 */
+            transform: translateY(-1px);
+        }
+        .save-send-button {
+            background-color: #22c55e; /* green-500 */
+            color: white;
+        }
+        .save-send-button:hover {
+            background-color: #16a34a; /* green-600 */
+            transform: translateY(-1px);
+        }
+        .action-button:active {
+            transform: translateY(0);
+        }
+
+        /* Styles for the new "Add" button and list */
+        .add-value-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .add-value-btn {
+            background-color: #4299e1; /* blue-500 */
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .add-value-btn:hover {
+            background-color: #3182ce;
+        }
+        .value-list {
+            margin-top: 5px;
+            padding-left: 10px;
+        }
+        .value-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px;
+            background-color: #f7fafc;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        .value-list-item-text {
+            color: #4a5568;
+        }
+        .remove-value-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .remove-value-btn:hover {
+            color: #dc2626;
+        }
+        .payment-total-display {
+            font-weight: 600;
+            text-align: right;
+            padding-top: 5px;
+            border-top: 1px solid #e2e8f0;
+            margin-top: 5px;
+        }
+
+        /* Modal Styles (General for all modals) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        .modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease-in-out;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-overlay.open .modal-content {
+            transform: translateY(0);
+        }
+        .modal-content h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: space-around;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        .modal-buttons button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            flex: 1;
+        }
+        .modal-buttons button.confirm-yes {
+            background-color: #38a169;
+            color: white;
+        }
+        .modal-buttons button.confirm-yes:hover {
+            background-color: #2f855a;
+        }
+        .modal-buttons button.confirm-no {
+            background-color: #e2e8f0;
+            color: #2d3748;
+        }
+        .modal-buttons button.confirm-no:hover {
+            background-color: #cbd5e0;
+        }
+
+        /* Specific Modal Adjustments */
+        #summaryContent {
+            text-align: left;
+            background-color: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #4a5568;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        #copySummaryBtn {
+            background-color: #4299e1;
+            color: white;
+        }
+        #copySummaryBtn:hover {
+            background-color: #3182ce;
+        }
+        #closeSummaryBtn {
+            background-color: #cbd5e0;
+            color: #2d3748;
+        }
+        #closeSummaryBtn:hover {
+            background-color: #a0aec0;
+        }
+        #whatsappInstructionModal .modal-content p {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            color: #4a5568;
+        }
+        #whatsappInstructionModal .modal-content strong {
+            color: #2d3748;
+        }
+        /* Style for radio group */
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+        }
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-weight: normal; /* Override default label bold */
+            color: #4a5568;
+        }
+        .radio-group input[type="radio"] {
+            margin-right: 8px;
+            transform: scale(1.2); /* Slightly larger radio buttons */
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="container bg-white p-8 rounded-xl shadow-lg">
+        <h1 class="text-4xl font-bold text-center mb-8 text-gray-800">Cuadre de Turno</h1>
+
+        <!-- Nuevo campo editable: Turno -->
+        <div class="input-group mb-6">
+            <label>Turno:</label>
+            <div class="radio-group">
+                <label>
+                    <input type="radio" name="turno" value="Mañana" id="turnoMañana"> Mañana
+                </label>
+                <label>
+                    <input type="radio" name="turno" value="Tarde" id="turnoTarde"> Tarde
+                </label>
+                <label>
+                    <input type="radio" name="turno" value="Noche" id="turnoNoche"> Noche
+                </label>
+            </div>
+        </div>
+
+        <!-- Nuevo campo editable: Nombre del Llenador -->
+        <div class="input-group mb-6">
+            <label for="nombreLlenador">Nombre del Llenador:</label>
+            <input type="text" id="nombreLlenador" value="" class="w-full">
+        </div>
+
+        <!-- Precio -->
+        <div class="input-group mb-6">
+            <label for="precio">Precio:</label>
+            <input type="text" id="precio" value="137.20" class="w-full">
+        </div>
+
+        <div class="section-title">Detalles de Metros</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mb-6">
+            <!-- Metro 1 Readings -->
+            <div class="meter-group">
+                <div class="input-group">
+                    <label for="metro1Number">Metro:</label>
+                    <input type="text" id="metro1Number" value="" class="w-full">
+                </div>
+                <div class="input-group">
+                    <label for="metro1P">P:</label>
+                    <input type="number" id="metro1P" value="0" class="w-full">
+                </div>
+                <div class="input-group">
+                    <label for="metro1F">F:</label>
+                    <input type="number" id="metro1F" value="0" class="w-full">
+                </div>
+                <div class="input-group">
+                    <label for="metro1GlsDisplay">Gls:</label>
+                    <input type="text" id="metro1GlsDisplay" value="0" class="w-full" readonly>
+                </div>
+            </div>
+
+            <!-- Metro 2 Readings -->
+            <div class="meter-group">
+                <div class="input-group">
+                    <label for="metro2Number">Metro:</label>
+                    <input type="text" id="metro2Number" value="" class="w-full">
+                </div>
+                <div class="input-group">
+                    <label for="metro2P">P:</label>
+                    <input type="number" id="metro2P" value="0" class="w-full">
+                </div>
+                <div class="input-group">
+                    <label for="metro2F">F:</label>
+                    <input type="number" id="metro2F" value="0" class="w-full">
+                </div>
+                <div class="input-group">
+                    <label for="metro2GlsDisplay">Gls:</label>
+                    <input type="text" id="metro2GlsDisplay" value="0" class="w-full" readonly>
+                </div>
+            </div>
+        </div>
+
+        <div class="total-display mb-6">
+            <span>Total Gls:</span>
+            <span id="totalGls">0</span>
+        </div>
+
+        <div class="section-title">Métodos de Pago</div>
+        <div class="mb-6">
+            <!-- Tarjeta de Credito with multiple values -->
+            <div class="mb-4">
+                <label class="block font-semibold text-gray-700 mb-2">Tarjeta de Crédito:</label>
+                <div class="add-value-container">
+                    <input type="number" id="tarjetaCreditoInput" placeholder="Añadir valor" class="w-full">
+                    <button id="addTarjetaCreditoBtn" class="add-value-btn">Agregar</button>
+                </div>
+                <div id="tarjetaCreditoList" class="value-list"></div>
+                <div id="tarjetaCreditoTotal" class="payment-total-display">Total: $0.00</div>
+            </div>
+            
+            <!-- Bono Gas with multiple values -->
+            <div class="mb-4">
+                <label class="block font-semibold text-gray-700 mb-2">Bono Gas:</label>
+                <div class="add-value-container">
+                    <input type="number" id="bonoGasInput" placeholder="Añadir valor" class="w-full">
+                    <button id="addBonoGasBtn" class="add-value-btn">Agregar</button>
+                </div>
+                <div id="bonoGasList" class="value-list"></div>
+                <div id="bonoGasTotal" class="payment-total-display">Total: $0.00</div>
+            </div>
+
+            <!-- Credito with multiple values -->
+            <div class="mb-4">
+                <label class="block font-semibold text-gray-700 mb-2">Crédito:</label>
+                <div class="add-value-container">
+                    <input type="number" id="creditoInput" placeholder="Añadir valor" class="w-full">
+                    <button id="addCreditoBtn" class="add-value-btn">Agregar</button>
+                </div>
+                <div id="creditoList" class="value-list"></div>
+                <div id="creditoTotal" class="payment-total-display">Total: $0.00</div>
+            </div>
+            
+            <div class="input-group">
+                <label for="totalEfectivo">Total Efectivo:</label>
+                <input type="text" id="totalEfectivo" value="$0.00" class="w-full" readonly>
+            </div>
+        </div>
+
+        <div class="total-display">
+            <span>Total General:</span>
+            <span id="totalGeneral">$0.00</span>
+        </div>
+
+        <p class="note">
+            Los valores se actualizan automáticamente al modificar las entradas.
+        </p>
+
+        <div class="button-group">
+            <button id="clearFieldsBtn" class="action-button clear-button">Limpiar Campos</button>
+            <button id="saveSendBtn" class="action-button save-send-button">Guardar y Enviar</button>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal for Clear Fields -->
+    <div id="clearConfirmationModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>¿Deseas limpiar todos los campos editables?</h3>
+            <div class="modal-buttons">
+                <button id="confirmClearYesBtn" class="confirm-yes">Sí</button>
+                <button id="confirmClearNoBtn" class="confirm-no">No</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal for Save and Send -->
+    <div id="sendConfirmationModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>¿Estás seguro que deseas enviar la información?</h3>
+            <div class="modal-buttons">
+                <button id="confirmSendYesBtn" class="confirm-yes">Sí</button>
+                <button id="confirmSendNoBtn" class="confirm-no">No</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WhatsApp Instruction Modal -->
+    <div id="whatsappInstructionModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Para enviar por WhatsApp:</h3>
+            <p>
+                1. **Toma una captura de pantalla** de la aplicación (usa la función de tu teléfono).<br>
+                2. **Copia el resumen** que aparecerá a continuación.<br>
+                3. Abre **WhatsApp** y pega el resumen y la captura de pantalla.
+            </p>
+            <div class="modal-buttons">
+                <button id="understandWhatsappBtn" class="confirm-yes">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Modal -->
+    <div id="summaryModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Resumen del Cuadre de Turno</h3>
+            <div id="summaryContent" class="text-left p-4 bg-gray-50 rounded-lg border border-gray-200 overflow-auto max-h-60">
+                <!-- Contenido del resumen se insertará aquí -->
+            </div>
+            <div class="modal-buttons">
+                <button id="copySummaryBtn" class="action-button">Copiar Resumen</button>
+                <button id="closeSummaryBtn" class="action-button">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generic Message Modal (for copy feedback) -->
+    <div id="messageModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="messageModalTitle"></h3>
+            <p id="messageModalContent"></p>
+            <div class="modal-buttons">
+                <button id="messageModalOkBtn" class="confirm-yes">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Utility Functions ---
+        function getNumericValue(elementId) {
+            const element = document.getElementById(elementId);
+            if (!element) {
+                console.error(`Element with ID '${elementId}' not found.`);
+                return 0;
+            }
+            let value;
+            if (element.type === 'radio') {
+                const checkedRadio = document.querySelector(`input[name="${element.name}"]:checked`);
+                return checkedRadio ? checkedRadio.value : '';
+            } else if (element.value !== undefined) {
+                value = element.value;
+            } else {
+                value = element.textContent;
+            }
+            value = value.replace('$', '');
+            value = value.replace(/,/g, '');
+            return parseFloat(value) || 0;
+        }
+
+        function formatNumberUS(number, isCurrency = false, decimalPlaces = 2) {
+            if (isNaN(number)) return isCurrency ? '$0.00' : '0';
+            const formatted = number.toLocaleString('en-US', { minimumFractionDigits: decimalPlaces, maximumFractionDigits: decimalPlaces });
+            return isCurrency ? `$${formatted}` : formatted;
+        }
+
+        function saveToLocalStorage(key, value) {
+            localStorage.setItem(key, JSON.stringify(value));
+        }
+
+        function loadFromLocalStorage(key, defaultValue) {
+            const storedValue = localStorage.getItem(key);
+            try {
+                return storedValue !== null ? JSON.parse(storedValue) : defaultValue;
+            } catch (e) {
+                console.error(`Error parsing localStorage key '${key}':`, e);
+                return defaultValue;
+            }
+        }
+        
+        // --- Calculation and Update Functions ---
+        function updateMeterGlsAndTotalGls() {
+            const metro1P = getNumericValue('metro1P');
+            const metro1F = getNumericValue('metro1F'); 
+            const metro1Gls = metro1F - metro1P;
+            document.getElementById('metro1GlsDisplay').value = formatNumberUS(metro1Gls, false, 0);
+
+            const metro2P = getNumericValue('metro2P');
+            const metro2F = getNumericValue('metro2F'); 
+            const metro2Gls = metro2F - metro2P;
+            document.getElementById('metro2GlsDisplay').value = formatNumberUS(metro2Gls, false, 0);
+
+            const totalGls = metro1Gls + metro2Gls;
+            document.getElementById('totalGls').textContent = formatNumberUS(totalGls, false, 0);
+
+            updateTotalGeneral();
+        }
+
+        function updateTotalGeneral() {
+            const totalGls = getNumericValue('totalGls');
+            const precio = getNumericValue('precio');
+            const calculatedTotalGeneral = totalGls * precio;
+            document.getElementById('totalGeneral').textContent = formatNumberUS(calculatedTotalGeneral, true);
+
+            updateTotalEfectivo();
+        }
+
+        function updateTotalEfectivo() {
+            const totalGeneral = getNumericValue('totalGeneral');
+            const tarjetaCreditoTotal = getPaymentMethodTotal('tarjetaCredito');
+            const bonoGasTotal = getPaymentMethodTotal('bonoGas');
+            const creditoTotal = getPaymentMethodTotal('credito');
+
+            const calculatedTotalEfectivo = totalGeneral - tarjetaCreditoTotal - bonoGasTotal - creditoTotal;
+            document.getElementById('totalEfectivo').value = formatNumberUS(calculatedTotalEfectivo, true);
+        }
+
+        function formatInputOnBlur(event, isCurrency = false) {
+            const value = getNumericValue(event.target.id);
+            event.target.value = formatNumberUS(value, isCurrency);
+            saveToLocalStorage(event.target.id, event.target.value);
+        }
+
+        function clearEditableFields() {
+            document.getElementById('metro1Number').value = ''; 
+            document.getElementById('metro1P').value = '0';
+            document.getElementById('metro1F').value = '0';
+            document.getElementById('metro2Number').value = ''; 
+            document.getElementById('metro2P').value = '0';
+            document.getElementById('metro2F').value = '0';
+
+            const defaultPrecio = 137.20;
+            document.getElementById('precio').value = formatNumberUS(defaultPrecio, true);
+            document.getElementById('nombreLlenador').value = '';
+
+            // Limpiar los nuevos campos de pago
+            saveToLocalStorage('tarjetaCredito', []);
+            saveToLocalStorage('bonoGas', []);
+            saveToLocalStorage('credito', []);
+            renderPaymentMethodList('tarjetaCredito');
+            renderPaymentMethodList('bonoGas');
+            renderPaymentMethodList('credito');
+
+            // Deseleccionar todos los radio buttons de turno
+            document.querySelectorAll('input[name="turno"]').forEach(radio => {
+                radio.checked = false;
+            });
+
+            saveToLocalStorage('metro1Number', ''); 
+            saveToLocalStorage('metro1P', '0');
+            saveToLocalStorage('metro1F', '0');
+            saveToLocalStorage('metro2Number', ''); 
+            saveToLocalStorage('metro2P', '0');
+            saveToLocalStorage('metro2F', '0');
+            saveToLocalStorage('precio', formatNumberUS(defaultPrecio, true));
+            saveToLocalStorage('nombreLlenador', '');
+            saveToLocalStorage('selectedTurno', ''); 
+
+            updateMeterGlsAndTotalGls();
+        }
+
+        // --- Functions for new payment fields ---
+        let paymentMethods = {
+            tarjetaCredito: loadFromLocalStorage('tarjetaCredito', []),
+            bonoGas: loadFromLocalStorage('bonoGas', []),
+            credito: loadFromLocalStorage('credito', [])
+        };
+
+        function addPaymentValue(method) {
+            const inputId = `${method}Input`;
+            const inputElement = document.getElementById(inputId);
+            const value = parseFloat(inputElement.value);
+
+            if (!isNaN(value) && value > 0) {
+                paymentMethods[method].push(value);
+                saveToLocalStorage(method, paymentMethods[method]);
+                renderPaymentMethodList(method);
+                inputElement.value = '';
+                updateTotalEfectivo();
+            } else {
+                openMessageBox('Error de Entrada', 'Por favor, introduce un valor numérico válido mayor que 0.');
+            }
+        }
+
+        function removePaymentValue(method, index) {
+            paymentMethods[method].splice(index, 1);
+            saveToLocalStorage(method, paymentMethods[method]);
+            renderPaymentMethodList(method);
+            updateTotalEfectivo();
+        }
+        
+        function getPaymentMethodTotal(method) {
+            return paymentMethods[method].reduce((sum, value) => sum + value, 0);
+        }
+
+        function renderPaymentMethodList(method) {
+            const listElement = document.getElementById(`${method}List`);
+            const totalElement = document.getElementById(`${method}Total`);
+            listElement.innerHTML = '';
+
+            if (paymentMethods[method].length > 0) {
+                paymentMethods[method].forEach((value, index) => {
+                    const listItem = document.createElement('div');
+                    listItem.classList.add('value-list-item');
+                    listItem.innerHTML = `
+                        <span class="value-list-item-text">${formatNumberUS(value, true)}</span>
+                        <button class="remove-value-btn" data-index="${index}">&times;</button>
+                    `;
+                    listElement.appendChild(listItem);
+                });
+
+                // Attach event listeners to new remove buttons
+                listElement.querySelectorAll('.remove-value-btn').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const index = parseInt(event.target.dataset.index);
+                        removePaymentValue(method, index);
+                    });
+                });
+            }
+            
+            totalElement.textContent = `Total: ${formatNumberUS(getPaymentMethodTotal(method), true)}`;
+        }
+
+
+        // --- Modal Logic ---
+
+        // Generic Message Modal
+        const messageModal = document.getElementById('messageModal');
+        const messageModalTitle = document.getElementById('messageModalTitle');
+        const messageModalContent = document.getElementById('messageModalContent');
+        const messageModalOkBtn = document.getElementById('messageModalOkBtn');
+
+        function openMessageBox(title, message) {
+            messageModalTitle.textContent = title;
+            messageModalContent.textContent = message;
+            messageModal.classList.add('open');
+        }
+
+        function closeMessageBox() {
+            messageModal.classList.remove('open');
+        }
+
+        messageModalOkBtn.addEventListener('click', closeMessageBox);
+        messageModal.addEventListener('click', (event) => {
+            if (event.target === messageModal) {
+                closeMessageBox();
+            }
+        });
+
+        // Clear Fields Confirmation Modal
+        const clearConfirmationModal = document.getElementById('clearConfirmationModal');
+        const confirmClearYesBtn = document.getElementById('confirmClearYesBtn');
+        const confirmClearNoBtn = document.getElementById('confirmClearNoBtn');
+        const clearFieldsBtn = document.getElementById('clearFieldsBtn');
+
+        function openClearConfirmationModal() {
+            clearConfirmationModal.classList.add('open');
+        }
+
+        function closeClearConfirmationModal() {
+            clearConfirmationModal.classList.remove('open');
+        }
+
+        clearFieldsBtn.addEventListener('click', openClearConfirmationModal);
+        confirmClearYesBtn.addEventListener('click', () => {
+            clearEditableFields();
+            closeClearConfirmationModal();
+        });
+        confirmClearNoBtn.addEventListener('click', closeClearConfirmationModal);
+        clearConfirmationModal.addEventListener('click', (event) => {
+            if (event.target === clearConfirmationModal) {
+                closeClearConfirmationModal();
+            }
+        });
+
+        // Save and Send Confirmation Modal
+        const sendConfirmationModal = document.getElementById('sendConfirmationModal');
+        const confirmSendYesBtn = document.getElementById('confirmSendYesBtn');
+        const confirmSendNoBtn = document.getElementById('confirmSendNoBtn'); 
+        const saveSendBtn = document.getElementById('saveSendBtn');
+
+        function openSendConfirmationModal() {
+            sendConfirmationModal.classList.add('open');
+        }
+
+        function closeSendConfirmationModal() {
+            sendConfirmationModal.classList.remove('open');
+        }
+
+        saveSendBtn.addEventListener('click', openSendConfirmationModal);
+        confirmSendYesBtn.addEventListener('click', () => {
+            // Validate required fields
+            const selectedTurno = document.querySelector('input[name="turno"]:checked');
+            const nombreLlenador = document.getElementById('nombreLlenador').value.trim();
+
+            if (!selectedTurno) {
+                openMessageBox('Error de Validación', 'Por favor, selecciona un Turno.');
+                closeSendConfirmationModal();
+                return;
+            }
+
+            if (nombreLlenador === '') {
+                openMessageBox('Error de Validación', 'Por favor, ingresa el Nombre del Llenador.');
+                closeSendConfirmationModal();
+                return;
+            }
+
+            closeSendConfirmationModal(); // Close the send confirmation modal
+            openWhatsappInstructionModal(); // Open the WhatsApp instruction modal
+        });
+        confirmSendNoBtn.addEventListener('click', closeSendConfirmationModal);
+        sendConfirmationModal.addEventListener('click', (event) => {
+            if (event.target === sendConfirmationModal) {
+                closeSendConfirmationModal();
+            }
+        });
+
+        // WhatsApp Instruction Modal
+        const whatsappInstructionModal = document.getElementById('whatsappInstructionModal');
+        const understandWhatsappBtn = document.getElementById('understandWhatsappBtn');
+
+        function openWhatsappInstructionModal() {
+            whatsappInstructionModal.classList.add('open');
+        }
+
+        function closeWhatsappInstructionModal() {
+            whatsappInstructionModal.classList.remove('open');
+        }
+
+        understandWhatsappBtn.addEventListener('click', () => {
+            closeWhatsappInstructionModal();
+            openSummaryModal(); // Proceed to open the summary modal after instructions
+        });
+        whatsappInstructionModal.addEventListener('click', (event) => {
+            if (event.target === whatsappInstructionModal) {
+                closeWhatsappInstructionModal();
+            }
+        });
+
+        // Summary Modal
+        const summaryModal = document.getElementById('summaryModal');
+        const summaryContent = document.getElementById('summaryContent');
+        const copySummaryBtn = document.getElementById('copySummaryBtn');
+        const closeSummaryBtn = document.getElementById('closeSummaryBtn');
+
+        function openSummaryModal() {
+            // Get current date
+            const currentDate = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            
+            // Collect all data
+            const data = {
+                turno: document.querySelector('input[name="turno"]:checked') ? document.querySelector('input[name="turno"]:checked').value : 'No Seleccionado',
+                nombreLlenador: document.getElementById('nombreLlenador').value,
+                metro1Number: document.getElementById('metro1Number').value, 
+                metro1P: document.getElementById('metro1P').value,
+                metro1F: document.getElementById('metro1F').value,
+                metro1Gls: document.getElementById('metro1GlsDisplay').value,
+                metro2Number: document.getElementById('metro2Number').value, 
+                metro2P: document.getElementById('metro2P').value,
+                metro2F: document.getElementById('metro2F').value,
+                metro2Gls: document.getElementById('metro2GlsDisplay').value,
+                totalGls: document.getElementById('totalGls').textContent,
+                tarjetaCreditoTotal: formatNumberUS(getPaymentMethodTotal('tarjetaCredito'), true),
+                bonoGasTotal: formatNumberUS(getPaymentMethodTotal('bonoGas'), true),
+                creditoTotal: formatNumberUS(getPaymentMethodTotal('credito'), true),
+                totalEfectivo: document.getElementById('totalEfectivo').value,
+                totalGeneral: document.getElementById('totalGeneral').textContent
+            };
+
+            // Build the summary text with meter details and payment totals
+            let summaryText = `*--- Cuadre de Turno ---*\n\n`;
+            summaryText += `Turno: ${data.turno} - Fecha: ${currentDate}\n`;
+            summaryText += `Llenador: ${data.nombreLlenador}\n\n`;
+            
+            summaryText += `*--- Detalles de Metros ---*\n\n`;
+            summaryText += `Metro: ${data.metro1Number || 'N/A'}\n`;
+            summaryText += `  P: ${data.metro1P}\n`;
+            summaryText += `  F: ${data.metro1F}\n`;
+            summaryText += `  Gls: ${data.metro1Gls}\n\n`;
+            
+            summaryText += `Metro: ${data.metro2Number || 'N/A'}\n`;
+            summaryText += `  P: ${data.metro2P}\n`;
+            summaryText += `  F: ${data.metro2F}\n`;
+            summaryText += `  Gls: ${data.metro2Gls}\n\n`;
+            summaryText += `Total Gls: ${data.totalGls}\n\n`;
+
+            summaryText += `*--- Totales de Pago ---*\n\n`;
+            summaryText += `Tarjeta de Crédito: ${data.tarjetaCreditoTotal}\n`;
+            summaryText += `Bono Gas: ${data.bonoGasTotal}\n`;
+            summaryText += `Crédito: ${data.creditoTotal}\n\n`;
+            summaryText += `Total Efectivo: ${data.totalEfectivo}\n`;
+            summaryText += `Total General: ${data.totalGeneral}\n`;
+            summaryText += `\n*--- Fin del Cuadre ---*`;
+
+            summaryContent.textContent = summaryText;
+            summaryModal.classList.add('open');
+        }
+
+        function closeSummaryModal() {
+            summaryModal.classList.remove('open');
+        }
+
+        function copySummaryToClipboard() {
+            const textToCopy = summaryContent.textContent;
+            const textArea = document.createElement('textarea');
+            textArea.value = textToCopy;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                const successful = document.execCommand('copy');
+                const msg = successful ? '¡Copiado!' : 'No se pudo copiar';
+                openMessageBox('Copiado', msg);
+            } catch (err) {
+                console.error('Error al copiar: ', err);
+                openMessageBox('Error', 'Error al copiar el resumen.');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const defaultPrecio = 137.20;
+
+            // Load values from localStorage or use defaults
+            document.getElementById('precio').value = loadFromLocalStorage('precio', formatNumberUS(defaultPrecio, true));
+            document.getElementById('metro1Number').value = loadFromLocalStorage('metro1Number', ''); 
+            document.getElementById('metro1P').value = loadFromLocalStorage('metro1P', '0');
+            document.getElementById('metro1F').value = loadFromLocalStorage('metro1F', '0');
+            document.getElementById('metro2Number').value = loadFromLocalStorage('metro2Number', ''); 
+            document.getElementById('metro2P').value = loadFromLocalStorage('metro2P', '0');
+            document.getElementById('metro2F').value = loadFromLocalStorage('metro2F', '0');
+            document.getElementById('nombreLlenador').value = loadFromLocalStorage('nombreLlenador', '').toUpperCase();
+
+            // Load selected turno
+            const savedTurno = loadFromLocalStorage('selectedTurno', '');
+            if (savedTurno) {
+                const radioBtn = document.getElementById(`turno${savedTurno}`);
+                if (radioBtn) {
+                    radioBtn.checked = true;
+                }
+            }
+
+            // Perform initial calculations and render payment lists
+            updateMeterGlsAndTotalGls();
+            renderPaymentMethodList('tarjetaCredito');
+            renderPaymentMethodList('bonoGas');
+            renderPaymentMethodList('credito');
+
+            // Add event listeners to save to localStorage and recalculate
+            document.getElementById('metro1Number').addEventListener('input', (event) => { saveToLocalStorage('metro1Number', event.target.value); }); 
+            document.getElementById('metro1Number').addEventListener('blur', (event) => { saveToLocalStorage('metro1Number', event.target.value); }); 
+
+            document.getElementById('metro1P').addEventListener('input', (event) => { updateMeterGlsAndTotalGls(); saveToLocalStorage('metro1P', event.target.value); });
+            document.getElementById('metro1F').addEventListener('input', (event) => { updateMeterGlsAndTotalGls(); saveToLocalStorage('metro1F', event.target.value); });
+            
+            document.getElementById('metro2Number').addEventListener('input', (event) => { saveToLocalStorage('metro2Number', event.target.value); }); 
+            document.getElementById('metro2Number').addEventListener('blur', (event) => { saveToLocalStorage('metro2Number', event.target.value); }); 
+
+            document.getElementById('metro2P').addEventListener('input', (event) => { updateMeterGlsAndTotalGls(); saveToLocalStorage('metro2P', event.target.value); });
+            document.getElementById('metro2F').addEventListener('input', (event) => { updateMeterGlsAndTotalGls(); saveToLocalStorage('metro2F', event.target.value); });
+
+            document.getElementById('precio').addEventListener('input', (event) => { updateTotalGeneral(); saveToLocalStorage('precio', event.target.value); });
+            document.getElementById('precio').addEventListener('blur', (event) => formatInputOnBlur(event, true));
+
+            document.getElementById('nombreLlenador').addEventListener('input', (event) => {
+                event.target.value = event.target.value.toUpperCase();
+                saveToLocalStorage('nombreLlenador', event.target.value);
+            });
+            document.getElementById('nombreLlenador').addEventListener('blur', (event) => {
+                saveToLocalStorage('nombreLlenador', event.target.value);
+            });
+
+            // Event listener for turno radio buttons
+            document.querySelectorAll('input[name="turno"]').forEach(radio => {
+                radio.addEventListener('change', (event) => {
+                    saveToLocalStorage('selectedTurno', event.target.value);
+                });
+            });
+
+            // Event listeners for the new "add" buttons
+            document.getElementById('addTarjetaCreditoBtn').addEventListener('click', () => addPaymentValue('tarjetaCredito'));
+            document.getElementById('addBonoGasBtn').addEventListener('click', () => addPaymentValue('bonoGas'));
+            document.getElementById('addCreditoBtn').addEventListener('click', () => addPaymentValue('credito'));
+            
+            // Event listeners for the new payment input fields to add with Enter key
+            document.getElementById('tarjetaCreditoInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') addPaymentValue('tarjetaCredito'); });
+            document.getElementById('bonoGasInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') addPaymentValue('bonoGas'); });
+            document.getElementById('creditoInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') addPaymentValue('credito'); });
+
+            // Event listeners for the summary modal buttons
+            copySummaryBtn.addEventListener('click', copySummaryToClipboard);
+            closeSummaryBtn.addEventListener('click', closeSummaryModal);
+            summaryModal.addEventListener('click', (event) => {
+                if (event.target === summaryModal) {
+                    closeSummaryModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
